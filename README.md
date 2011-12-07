@@ -4,6 +4,9 @@ Windsor (and allusion to the [Windsor knot][knot]) is a browser-based runtime fo
 
 Windsor is expected to work in Safari, Chrome, and any other WebKit-based browser, but it is recommended that you restrict its use to Safari: Bowtie themes are designed to run on OS X's system-provided WebKit, which is the same WebKit used by Safari. While various WebKit versions are mostly the same, some may introduce new features, exclude other features, and may demonstrate very subtle differences in rendering.
 
+  [knot]: http://en.wikipedia.org/wiki/Windsor_knot
+  [iframe]: http://www.w3.org/TR/html5/the-iframe-element.html
+
 License
 -------
     Copyright (C) 2011 Matt Patenaude.
