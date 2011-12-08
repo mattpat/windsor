@@ -37,6 +37,10 @@ Windsor implements the entire [Bowtie Theme API][api] and exposes it to an ifram
 
 In order for Windsor to work, the theme you want to load **must be hosted on the same domain as the website using Windsor**. This is because most web browsers prevent scripting interoperability between frames that are not served out of the same origin (as rightly they should!).
 
+Note also that, in newer builds of Chrome and future builds of Safari, **artwork must also be served from the same origin**, or else it will not display. This is because Windsor uses `canvas` to render artwork according to a theme's `Info.plist` settings rather than just passing off URLs immediately. For more information, see [the MDN article on CORS Enabled Images][cors].
+
+  [cors]: https://developer.mozilla.org/en/CORS_Enabled_Image
+
 License
 -------
     Copyright (C) 2011 Matt Patenaude.
