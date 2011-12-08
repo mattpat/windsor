@@ -315,7 +315,14 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
                         while (nextSibling.nodeType != 1)
                             nextSibling = nextSibling.nextSibling;
                         
-                        metadata[keys[i].textContent] = nextSibling.textContent;
+                        var val = nextSibling.textContent;
+                        var name = nextSibling.nodeName.toLowerCase();
+                        if (name == 'true')
+                            val = true;
+                        else if (name == 'false')
+                            val = false;
+                        
+                        metadata[keys[i].textContent] = val;
                     }
                 }
                 
