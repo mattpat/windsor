@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Windsor Demo: Default Theme</title>
+    <script type="text/javascript" src="windsor.js"></script>
+    <script type="text/javascript">
+    var runtime = new Windsor.Runtime();
+    runtime.ignoreHTTPStatusCodes = true;   // so we can run this locally
+    
+    function loadWindsor(){
+        runtime.loadTheme('Default.bowtie', function(success, el){
+            if (!success)
+            {
+                alert('Windsor failed to load the default theme!');
+                return;
+            }
+            
+            el.style.display = null;
+        });
+    }
+    </script>
+</head>
+<body>
+    <h1>Windsor Demo: Default Theme</h1>
+    <p>This is a demonstration of using Windsor (a browser-based Bowtie theme runtime) with the default Bowtie theme, known internally as Flip.</p>
+    <p><button id="startFlip();" onclick="loadWindsor();">Load Windsor with Default Theme</button></p>
+</body>
+</html>
