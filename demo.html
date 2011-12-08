@@ -5,6 +5,8 @@
     <title>Windsor Demo: Default Theme</title>
     <script type="text/javascript" src="windsor.js"></script>
     <script type="text/javascript">
+    var trackRating = 0;    // little trick for demo purposes :)
+    
     var runtime = new Windsor.Runtime();
     runtime.ignoreHTTPStatusCodes = true;   // so we can run this locally
     runtime.playerName = 'Demo';
@@ -35,6 +37,9 @@
         },
         previousTrack: function(){
             alert('The theme asked us to skip to the previous track! We\'ll just stay put for now.');
+        },
+        rating: function(){
+            return trackRating;
         }
     };
     
@@ -54,6 +59,7 @@
     function playDemoTrack(){
         document.getElementById('demoTrackPlayer').play();
         
+        trackRating = 60;
         runtime.changeTrack({
             title: 'MasqueradeE',
             artist: 'Celestial Aeon Project',
