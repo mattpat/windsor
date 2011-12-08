@@ -1,6 +1,6 @@
 Windsor
 =======
-Windsor (and allusion to the [Windsor knot][knot]) is a browser-based runtime for Bowtie themes. It allows you to load an arbitrary Bowtie theme hosted at your domain into an [iframe][iframe], and then manipulate what it displays.
+Windsor (an allusion to the [Windsor knot][knot]) is a browser-based runtime for Bowtie themes. It allows you to load an arbitrary Bowtie theme hosted at your domain into an [iframe][iframe], and then manipulate what it displays.
 
 Windsor is expected to work in Safari, Chrome, and any other WebKit-based browser, but it is recommended that you restrict its use to Safari: Bowtie themes are designed to run on OS X's system-provided WebKit, which is the same WebKit used by Safari. While various WebKit versions are mostly the same, some may introduce new features, exclude other features, and may demonstrate very subtle differences in rendering.
 
