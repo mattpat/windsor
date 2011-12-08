@@ -143,10 +143,7 @@ Windsor.Runtime = function(){
                 return wr.playerName;
             },
             escape: function(str){
-                str = str.replace("&", "&amp;");
-                str = str.replace("<", "&lt;");
-                str = str.replace(">", "&gt;");
-                return str;
+                return Windsor.Utils.escape(str);
             },
             log: function(str){
                 if (console && 'log' in console)
@@ -454,6 +451,9 @@ Windsor.Runtime.prototype.unloadTheme = function(){
         this.__emit('themeUnloaded');
 };
 Windsor.Runtime.prototype.changeTrack = function(track){
+    if (!(track instanceof Windsor.Track))
+        track = new Windsor.Track(track);
+    
     this.__trackCurrentTrack(track);
     this.__targetIframe('WRTrackChanged', [track]);
 };
@@ -466,12 +466,29 @@ Windsor.Runtime.prototype.changePlayState = function(playState){
 };
 
 // Track class
-Windsor.Track = function(name, artist, album, length, genre){
-    this.name = (name != null) ? name : null;
-    this.artist = (artist != null) ? artist : null;
-    this.album = (album != null) ? album : null;
-    this.genre = (genre != null) ? genre : null;
-    this.length = (length != null) ? length : 0.0;
+Windsor.Track = function(props){
+    var self = this;
+    var properties = props;
+    this.property = function(prop){
+        return properties[prop];
+    };
+    this.propertyHTML = function(prop){
+        return Windsor.Utils.escape(properties[prop]);
+    };
+    
+    for (var prop in properties)
+    {
+        if (properties.hasOwnProperty(prop))
+        {
+            Object.defineProperty(this, prop, {
+                get: (function(p){
+                    return function(){
+                        return self.propertyHTML(p);
+                    }
+                })(prop)
+            });
+        }
+    }
 };
 
 // Utility functions
@@ -503,3 +520,10 @@ Windsor.Utils.augmentIframe = function(iframe, wr, metadata){
         iframe.contentWindow[metadata['BTStatusFunction']].apply(iframe.contentWindow, arguments);
     } : Windsor.Utils.noop;
 }
+
+Windsor.Utils.escape = function(str){
+    str = str.replace("&", "&amp;");
+    str = str.replace("<", "&lt;");
+    str = str.replace(">", "&gt;");
+    return str;
+};
