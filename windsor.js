@@ -20,7 +20,8 @@ Windsor.Runtime = function(){
         canvas = c;
     };
     this.__targetIframe = function(method, args){
-        iframe[method].apply(this, args);
+        if (iframe != null)
+            iframe[method].apply(this, args);
     };
     this.__destroyRenderers = function(){
         if (iframe == null)
