@@ -7,6 +7,36 @@ Windsor is expected to work in Safari, Chrome, and any other WebKit-based browse
   [knot]: http://en.wikipedia.org/wiki/Windsor_knot
   [iframe]: http://www.w3.org/TR/html5/the-iframe-element.html
 
+Usage
+-----
+Start out by creating an instance of the runtime object:
+
+    var runtime = new Windsor.Runtime();
+
+When you're ready to load a theme, call the `loadTheme` method of the runtime with the address of the theme (it can be relative, and *must* be in the same origin as the host website), an optional callback to be called when the theme finishes loading (can be `null`), and optionally the element that you want to contain your theme's iframe (this defaults to `document.body`).
+
+    runtime.loadTheme('Default.bowtie', function(success, iframe){
+        if (success)
+        {
+            // show the iframe, nothing fancy, just "appears"
+            iframe.style.display = null;
+        }
+    });
+
+Your callback receives two parameters: `success`, which is a boolean indicating whether or not the theme loaded into the browser; and `iframe`, which is a reference to the DOM element representing. When this callback is called, the iframe will have "display: none" set in its `style` attribute -- this gives you the opportunity to fade it in, perform animations, or just display it immediately.
+
+**IMPORTANT NOTE**: it is strongly advisable that you *DO NOT* move the iframe around in the DOM (or at the very least, do not remove and then reappend it). If you need the iframe to be contained by a particular element, pass it as the third parameter to `loadTheme`.
+
+More Details
+------------
+The main entry point of Windsor is the `Runtime` class. You can load multiple displayable themes off a single runtime (and they'll all stay in sync with the same track/artwork information), or create multiple runtimes to have multiple instances each displaying a different track. Most users will probably just want a single runtime showing a single theme, however.
+
+Windsor implements the entire [Bowtie Theme API][api] and exposes it to an iframe containing a Bowtie theme. The implementation currently reflects the Theme API as of Bowtie 1.4, so Windsor identifies itself to the theme as such (version 1.4, build 1400).
+
+  [api]: http://library.13bold.com/developing-themes-for-bowtie/
+
+In order for Windsor to work, the theme you want to load **must be hosted on the same domain as the website using Windsor**. This is because most web browsers prevent scripting interoperability between frames that are not served out of the same origin (as rightly they should!).
+
 License
 -------
     Copyright (C) 2011 Matt Patenaude.
