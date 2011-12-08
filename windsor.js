@@ -468,7 +468,7 @@ Windsor.Runtime.prototype.changePlayState = function(playState){
 // Track class
 Windsor.Track = function(props){
     var self = this;
-    var properties = props;
+    var properties = (props != null) ? props : {};
     this.property = function(prop){
         return properties[prop];
     };
