@@ -44,6 +44,8 @@
     };
     
     function loadWindsor(){
+        var spinner = document.getElementById('spinner');
+        spinner.style.display = null;
         runtime.loadTheme('Default.bowtie', function(success, el){
             if (!success)
             {
@@ -51,6 +53,7 @@
                 return;
             }
             
+            spinner.style.display = 'none';
             el.style.display = null;
             runtime.changeTrack({});  // most themes expect this, indicates nothing playing
         });
@@ -75,6 +78,7 @@
     <p>This is a demonstration of using Windsor (a browser-based Bowtie theme runtime) with the default Bowtie theme, known internally as Flip. Click the first button to load the Default theme into Windsor, and then the second to play a royalty-free demo track that can be controlled by the Bowtie theme. Requires HTML5 Audio support with MP3 files (works in Safari on Mac).</p>
     <p>Double-click the theme to flip it over!</p>
     <p><button id="startFlip" onclick="loadWindsor();">Load Windsor with Default Theme</button> <button id="demoTrack" onclick="playDemoTrack();">Play Demo Track (Requires MP3 HTML5 Audio Support)</button></p>
-    <p><audio id="demoTrackPlayer" src="demo.mp3"></p>
+    <p><audio id="demoTrackPlayer" src="demo-audio.mp3"></p>
+    <p id="spinner" style="display: none;"><img src="demo-spinner.gif"></p>
 </body>
 </html>
