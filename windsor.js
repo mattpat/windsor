@@ -141,9 +141,9 @@ Windsor.Runtime = function(){
             },
             escape: function(str){
                 str = str.replace("&", "&amp;");
-        		str = str.replace("<", "&lt;");
-        		str = str.replace(">", "&gt;");
-        		return str;
+                str = str.replace("<", "&lt;");
+                str = str.replace(">", "&gt;");
+                return str;
             },
             log: function(str){
                 if (console && 'log' in console)
