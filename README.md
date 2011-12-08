@@ -29,7 +29,7 @@ Your callback receives two parameters: `success`, which is a boolean indicating 
 
 More Details
 ------------
-The main entry point of Windsor is the `Runtime` class. You can load multiple displayable themes off a single runtime (and they'll all stay in sync with the same track/artwork information), or create multiple runtimes to have multiple instances each displaying a different track. Most users will probably just want a single runtime showing a single theme, however.
+The main entry point of Windsor is the `Runtime` class. You can load one theme at a time per runtime, but you can have multiple runtimes if you'd like to have more than one theme running on your page (though I'm not sure why you would).
 
 Windsor implements the entire [Bowtie Theme API][api] and exposes it to an iframe containing a Bowtie theme. The implementation currently reflects the Theme API as of Bowtie 1.4, so Windsor identifies itself to the theme as such (version 1.4, build 1400).
 

@@ -8,38 +8,85 @@ var Windsor = {};
 Windsor.Runtime = function(){
     var wr = this;
     this.ignoreHTTPStatusCodes = false; // useful for debugging locally
+    this.showOnLoad = false;
+    this.playerName = 'iTunes';
     
+    // iframe tracking
+    var iframe = null;
+    this.__trackIframe = function(ifr){
+        iframe = ifr;
+    };
+    this.__targetIframe = function(method, args){
+        iframe[method].apply(this, args);
+    };
+    this.__destroyIframe = function(){
+        if (iframe == null)
+            return false;
+        
+        if (iframe.parentNode != null)
+            iframe.parentNode.removeChild(iframe);
+        iframe = null;
+        
+        return true;
+    };
+    
+    // theme API
     this.API = {
         Bowtie: {
             addMouseTrackingForElement: function(element, callback){
-                
+                element.addEventListener('mouseover', function(){
+                    callback(true, element);
+                });
+                element.addEventListener('mouseout', function(){
+                    callback(false, element);
+                });
             },
             buildVersion: function(){
-                
+                return 1400;
             },
             currentFrame: function(){
+                if (iframe == null)
+                    return [0, 0, 0, 0];
                 
+                return [0, 0, iframe.width, iframe.height];
             },
             currentSourceName: function(){
-                
+                return wr.playerName;
             },
             escape: function(str){
-                
+                str = str.replace("&", "&amp;");
+        		str = str.replace("<", "&lt;");
+        		str = str.replace(">", "&gt;");
+        		return str;
             },
             log: function(str){
-                
+                if (console && 'log' in console)
+                    console.log('Bowtie Theme: ' + str);
             },
             preferenceForKey: function(key){
+                if (iframe == null)
+                    return undefined;
                 
+                if (typeof(localStorage) == 'undefined')
+                    return undefined;
+                
+                var result = localStorage.getItem('WR#' + iframe.WRThemeMetadata['BTThemeIdentifier'] + '#' + key);
+                return (result == null) ? undefined : result;
             },
             setFrame: function(xOffset, yOffset, width, height){
-                
+                // no-op
             },
             setPreferenceForKey: function(value, key){
+                if (iframe == null)
+                    return undefined;
                 
+                if (typeof(localStorage) == 'undefined')
+                    return undefined;
+                
+                localStorage.setItem('WR#' + iframe.WRThemeMetadata['BTThemeIdentifier'] + '#' + key, value);
             },
             version: function(){
-                
+                return '1.4';
             }
         },
         Player: {
@@ -139,7 +186,8 @@ Windsor.Runtime = function(){
     var listeners = {
         'themeMetadataLoaded': [],
         'themeLoaded': [],
-        'themeLoadFailed': []
+        'themeLoadFailed': [],
+        'themeUnloaded': []
     };
     
     this.addEventListener = function(event, callback){
@@ -163,21 +211,6 @@ Windsor.Runtime = function(){
                 listeners[event][i].apply(this, args);
         }
     };
-    
-    // iframe tracking
-    var iframes = [];
-    this.__trackIframe = function(ifr){
-        iframes.push(ifr);
-    };
-    this.__stopTrackingIframe = function(ifr){
-        var idx = iframes.indexOf(ifr);
-        if (idx > -1)
-            iframes.splice(idx, 1);
-    };
-    this.__walkIframes = function(method, args){
-        for (var i = 0; i < iframes.length; i++)
-            iframes[i][method].apply(this, args);
-    };
 };
 /*
     This method will load a theme's metadata, parse it, and then load the
@@ -187,6 +220,8 @@ Windsor.Runtime = function(){
 Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
     var wr = this;
     container = (container != null) ? container : document.body;
+    
+    this.unloadTheme();
     
     var metadataReq = new XMLHttpRequest();
     metadataReq.open('GET', address + '/Info.plist', true);
@@ -223,6 +258,9 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
                     iframe.onload = function(){
                         Windsor.Utils.augmentIframe(iframe, wr, metadata);
                         
+                        if (wr.showOnLoad)
+                            iframe.style.display = null;
+                        
                         if (typeof(callback) == 'function')
                             callback(true, iframe);
                         
@@ -242,14 +280,18 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
     };
     metadataReq.send(null);
 };
+Windsor.Runtime.prototype.unloadTheme = function(){
+    if (this.__destroyIframe())
+        this.__emit('themeUnloaded');
+};
 Windsor.Runtime.prototype.changeTrack = function(track){
-    this.__walkIframes('WRTrackChanged', [track]);
+    this.__targetIframe('WRTrackChanged', [track]);
 };
 Windsor.Runtime.prototype.changeArtwork = function(address){
-    this.__walkIframes('WRArtworkChanged', [address]);
+    this.__targetIframe('WRArtworkChanged', [address]);
 };
 Windsor.Runtime.prototype.changePlayState = function(playState){
-    this.__walkIframes('WRPlayStateChanged', [playState]);
+    this.__targetIframe('WRPlayStateChanged', [playState]);
 };
 
 // Track class
@@ -268,6 +310,7 @@ Windsor.Utils.noop = function(){
 };
 
 Windsor.Utils.augmentIframe = function(iframe, wr, metadata){
+    iframe.WRThemeMetadata = metadata;
     iframe.contentWindow.Bowtie = wr.API.Bowtie;
     iframe.contentWindow.Player = wr.API.Player;
     iframe.contentWindow.iTunes = wr.API.Player;
