@@ -23,6 +23,12 @@ Windsor.Runtime = function(){
         if (iframe == null)
             return false;
         
+        if ('WRStatusInterval' in iframe)
+        {
+            clearInterval(iframe.WRStatusInterval);
+            delete iframe.WRStatusInterval;
+        }
+        
         if (iframe.parentNode != null)
             iframe.parentNode.removeChild(iframe);
         iframe = null;
@@ -261,6 +267,9 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
                         if (wr.showOnLoad)
                             iframe.style.display = null;
                         
+                        if ('BTStatusFunction' in metadata)
+                            iframe.WRStatusInterval = setInterval(iframe.WRStatusUpdate, 1000);
+                        
                         if (typeof(callback) == 'function')
                             callback(true, iframe);
                         
@@ -326,6 +335,10 @@ Windsor.Utils.augmentIframe = function(iframe, wr, metadata){
     
     iframe.WRPlayStateChanged = ('BTPlayStateFunction' in metadata) ? function(){
         iframe.contentWindow[metadata['BTPlayStateFunction']].apply(iframe.contentWindow, arguments);
+    } : Windsor.Utils.noop;
+    
+    iframe.WRStatusUpdate = ('BTStatusFunction' in metadata) ? function(){
+        iframe.contentWindow[metadata['BTStatusFunction']].apply(iframe.contentWindow, arguments);
     } : Windsor.Utils.noop;
     
     wr.__trackIframe(iframe);
