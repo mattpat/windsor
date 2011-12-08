@@ -221,7 +221,7 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
                     iframe.width = metadata['BTWindowWidth'];
                     iframe.height = metadata['BTWindowHeight'];
                     iframe.onload = function(){
-                        WRAugmentIframe(iframe, wr, metadata);
+                        Windsor.Utils.augmentIframe(iframe, wr, metadata);
                         
                         if (typeof(callback) == 'function')
                             callback(true, iframe);
@@ -262,11 +262,12 @@ Windsor.Track = function(name, artist, album, length, genre){
 };
 
 // Utility functions
-function WRNoop(){
+Windsor.Utils = {};
+Windsor.Utils.noop = function(){
     // do nothing
-}
+};
 
-function WRAugmentIframe(iframe, wr, metadata){
+Windsor.Utils.augmentIframe = function(iframe, wr, metadata){
     iframe.contentWindow.Bowtie = wr.API.Bowtie;
     iframe.contentWindow.Player = wr.API.Player;
     iframe.contentWindow.iTunes = wr.API.Player;
@@ -274,15 +275,15 @@ function WRAugmentIframe(iframe, wr, metadata){
     
     iframe.WRTrackChanged = ('BTTrackFunction' in metadata) ? function(){
         iframe.contentWindow[metadata['BTTrackFunction']].apply(iframe.contentWindow, arguments);
-    } : WRNoop;
+    } : Windsor.Utils.noop;
     
     iframe.WRArtworkChanged = ('BTArtworkFunction' in metadata) ? function(){
         iframe.contentWindow[metadata['BTArtworkFunction']].apply(iframe.contentWindow, arguments);
-    } : WRNoop;
+    } : Windsor.Utils.noop;
     
     iframe.WRPlayStateChanged = ('BTPlayStateFunction' in metadata) ? function(){
         iframe.contentWindow[metadata['BTPlayStateFunction']].apply(iframe.contentWindow, arguments);
-    } : WRNoop;
+    } : Windsor.Utils.noop;
     
     wr.__trackIframe(iframe);
     
