@@ -23,7 +23,7 @@ When you're ready to load a theme, call the `loadTheme` method of the runtime wi
         }
     });
 
-Your callback receives two parameters: `success`, which is a boolean indicating whether or not the theme loaded into the browser; and `iframe`, which is a reference to the DOM element representing. When this callback is called, the iframe will have "display: none" set in its `style` attribute -- this gives you the opportunity to fade it in, perform animations, or just display it immediately.
+Your callback receives two parameters: `success`, which is a boolean indicating whether or not the theme loaded into the browser; and `iframe`, which is a reference to the DOM element that represents the loaded theme (it can be obtained at another time using `runtime.getElement()`). When this callback is called, the iframe will have "display: none" set in its `style` attribute -- this gives you the opportunity to fade it in, perform animations, or just display it immediately.
 
 **IMPORTANT NOTE**: it is strongly advisable that you *DO NOT* move the iframe around in the DOM (or at the very least, do not remove and then reappend it). If you need the iframe to be contained by a particular element, pass it as the third parameter to `loadTheme`.
 
