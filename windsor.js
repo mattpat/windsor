@@ -11,15 +11,17 @@ Windsor.Runtime = function(){
     this.showOnLoad = false;
     this.playerName = 'iTunes';
     
-    // iframe tracking
+    // renderers
     var iframe = null;
-    this.__trackIframe = function(ifr){
+    var canvas = null;
+    this.__installRenderers = function(ifr, c){
         iframe = ifr;
+        canvas = c;
     };
     this.__targetIframe = function(method, args){
         iframe[method].apply(this, args);
     };
-    this.__destroyIframe = function(){
+    this.__destroyRenderers = function(){
         if (iframe == null)
             return false;
         
@@ -33,7 +35,73 @@ Windsor.Runtime = function(){
             iframe.parentNode.removeChild(iframe);
         iframe = null;
         
+        canvas = null;
+        
         return true;
+    };
+    
+    // artwork rendering
+    var currentlyPendingArtwork = null;
+    var currentArtwork = '';
+    this.__renderArtwork = function(address){
+        var wr = this;
+        
+        currentlyPendingArtwork = address;
+        if (address == null)
+        {
+            currentArtwork = '';
+            wr.__targetIframe('WRArtworkChanged', ['']);
+            return;
+        }
+        
+        var metadata = iframe.WRThemeMetadata;
+        var w = ('BTArtworkWidth' in metadata) ? parseInt(metadata['BTArtworkWidth']) : 175;
+        var h = ('BTArtworkHeight' in metadata) ? parseInt(metadata['BTArtworkHeight']) : 175;       
+        
+        // load the image
+        var im = new Image();
+        im.onload = function(){
+            if (currentlyPendingArtwork != address)
+                return; // __renderArtwork was called again in the interim
+            
+            // determine the appropriate size for the image
+            var scaledSize;
+            if (im.width == im.height)
+                scaledSize = [w, h];
+            if (im.width > im.height)
+                scaledSize = [w, Math.round(im.height / (im.width / w))];
+            if (im.height > im.width)
+                scaledSize = [Math.round(im.width / (im.height / h)), h];
+            
+            if ('BTDisableArtworkSquaring' in metadata && metadata['BTDisableArtworkSquaring'])
+            {
+                w = scaledSize[0];
+                h = scaledSize[1];
+            }
+            
+            // clear things out
+            canvas.width = w;
+            canvas.height = h;
+
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // fill with background color
+            var bgcolor = '#000';
+            if ('BTArtworkBackgroundFill' in metadata)
+                bgcolor = metadata['BTArtworkBackgroundFill'];
+            
+            ctx.fillStyle = bgcolor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.drawImage(im, Math.round((w - scaledSize[0]) / 2.0), Math.round((h - scaledSize[1]) / 2.0), scaledSize[0], scaledSize[1]);
+            
+            // finish
+            currentlyPendingArtwork = null;
+            currentArtwork = canvas.toDataURL();
+            wr.__targetIframe('WRArtworkChanged', [currentArtwork]);
+        };
+        im.src = address;
     };
     
     // theme API
@@ -136,7 +204,7 @@ Windsor.Runtime = function(){
                 
             },
             renderedArtwork: function(){
-                
+                return currentArtwork;
             },
             repeat: function(){
                 
@@ -259,16 +327,23 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
                     iframe.style.display = 'none';
                     iframe.style.border = 'none';
                     iframe.src = address + '/' + metadata['BTMainFile'];
-                    iframe.width = metadata['BTWindowWidth'];
-                    iframe.height = metadata['BTWindowHeight'];
+                    iframe.width = parseInt(metadata['BTWindowWidth']);
+                    iframe.height = parseInt(metadata['BTWindowHeight']);
                     iframe.onload = function(){
+                        var canvas = document.createElement('canvas');
+                        
                         Windsor.Utils.augmentIframe(iframe, wr, metadata);
                         
-                        if (wr.showOnLoad)
-                            iframe.style.display = null;
+                        wr.__installRenderers(iframe, canvas);
+                        
+                        if ('BTReadyFunction' in metadata)
+                            iframe.contentWindow[metadata['BTReadyFunction']]();
                         
                         if ('BTStatusFunction' in metadata)
                             iframe.WRStatusInterval = setInterval(iframe.WRStatusUpdate, 1000);
+                        
+                        if (wr.showOnLoad)
+                            iframe.style.display = null;
                         
                         if (typeof(callback) == 'function')
                             callback(true, iframe);
@@ -290,14 +365,15 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
     metadataReq.send(null);
 };
 Windsor.Runtime.prototype.unloadTheme = function(){
-    if (this.__destroyIframe())
+    if (this.__destroyRenderers())
         this.__emit('themeUnloaded');
 };
 Windsor.Runtime.prototype.changeTrack = function(track){
     this.__targetIframe('WRTrackChanged', [track]);
 };
 Windsor.Runtime.prototype.changeArtwork = function(address){
-    this.__targetIframe('WRArtworkChanged', [address]);
+    this.__renderArtwork(address);
+    //this.__targetIframe('WRArtworkChanged', [address]);
 };
 Windsor.Runtime.prototype.changePlayState = function(playState){
     this.__targetIframe('WRPlayStateChanged', [playState]);
@@ -340,9 +416,4 @@ Windsor.Utils.augmentIframe = function(iframe, wr, metadata){
     iframe.WRStatusUpdate = ('BTStatusFunction' in metadata) ? function(){
         iframe.contentWindow[metadata['BTStatusFunction']].apply(iframe.contentWindow, arguments);
     } : Windsor.Utils.noop;
-    
-    wr.__trackIframe(iframe);
-    
-    if ('BTReadyFunction' in metadata)
-        iframe.contentWindow[metadata['BTReadyFunction']]();
 }
