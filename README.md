@@ -27,6 +27,79 @@ Your callback receives two parameters: `success`, which is a boolean indicating 
 
 **IMPORTANT NOTE**: it is strongly advisable that you *DO NOT* move the iframe around in the DOM (or at the very least, do not remove and then reappend it). If you need the iframe to be contained by a particular element, pass it as the third parameter to `loadTheme`.
 
+Configuring a Player
+--------------------
+You have complete control over what kind of "music player" Bowtie is controlling.
+
+The `Runtime` object has two top-level properties: `playerName` and `playerDelegate`. The first is the name of your music player (the default is "iTunes"), and is what gets returned if the theme calls `Bowtie.currentSourceName()` or `Player.name()`. The second is an object that acts as a bridge to the theme's `Player`/`iTunes` object. The methods of this object get called when the theme makes calls on the `Player` object (like if the user clicks a play or next track button, for instance).
+
+You can implement as many or as few of the following methods in the player delegate object as you'd like (see the [Player Object Reference][player] for details on what each of these methods should do; reasonable defaults are provided for some of the more obscure ones):
+
+  [player]: http://library.13bold.com/developing-themes-for-bowtie/player-reference/
+
+* canShow()
+* currentTrack()
+* isConnected()
+* nextTrack()
+* pause()
+* play()
+* playerPosition()
+* playPause()
+* playState()
+* previousTrack()
+* rating()
+* repeat()
+* setPlayerPosition(position)
+* setRating(rating)
+* setRepeat(repeat)
+* setShuffle(shuffle)
+* setVolume(volume)
+* show()
+* shuffle()
+* stop()
+* uniqueString()
+* volume()
+
+You can then call the `Runtime` methods `changeTrack(trackObj)`, `changeArtwork(url)`, and `changePlayState(state)` to notify the theme that the track, artwork, and play state have changed, respectively.
+
+Below is a sample implementation of a way to interface Windsor with a fictitious HTML5 audio player called "TunesPlayer":
+
+    var tunesPlayer = new TunesPlayerSuperAmazingAwesomeMusicPlayer();
+    // imagine this plays audio, and has methods like .play() and .pause()
+    
+    var runtime = new Windsor.Runtime();
+    runtime.playerName = 'TunesPlayer';
+    runtime.playerDelegate = {
+        play: function(){
+            // tell the audio player to play
+            tunesPlayer.play();
+        },
+        pause: function(){
+            // tell the audio player to pause
+            tunesPlayer.pause();
+        },
+        nextTrack: function(){
+            // tell the audio player to advance to the next track
+            tunesPlayer.next();
+        },
+        previousTrack: function(){
+            // tell the audio player to advance to the next track
+            tunesPlayer.previous();
+        }
+    };
+    
+    // give feedback when the not-real TunesPlayer tells us the track changes
+    tunesPlayer.ontrackchange = function(track, artworkURL){
+        runtime.changeTrack({title: track.title, artist: track.artist, album: track.album});
+        runtime.changeArtwork(artworkURL);
+    };
+    tunesPlayer.onplaystatechange = function(paused){
+        if (paused)
+            runtime.changePlayState(2);
+        else
+            runtime.changePlayState(1);
+    };
+
 More Details
 ------------
 The main entry point of Windsor is the `Runtime` class. You can load one theme at a time per runtime, but you can have multiple runtimes if you'd like to have more than one theme running on your page (though I'm not sure why you would).

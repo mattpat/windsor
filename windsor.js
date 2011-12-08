@@ -10,6 +10,7 @@ Windsor.Runtime = function(){
     this.ignoreHTTPStatusCodes = false; // useful for debugging locally
     this.showOnLoad = false;
     this.playerName = 'iTunes';
+    this.playerDelegate = {};
     
     // renderers
     var iframe = null;
@@ -104,6 +105,16 @@ Windsor.Runtime = function(){
         im.src = address;
     };
     
+    // track tracking
+    var currentTrack = null;
+    var currentPlayState = 0;
+    this.__trackCurrentTrack = function(track){
+        currentTrack = track;
+    };
+    this.__trackPlayState = function(ps){
+        currentPlayState = ps;
+    };
+    
     // theme API
     this.API = {
         Bowtie: {
@@ -165,79 +176,142 @@ Windsor.Runtime = function(){
         },
         Player: {
             canShow: function(){
+                if ('canShow' in wr.playerDelegate)
+                    return wr.playerDelegate.canShow();
                 
+                return false;
             },
             currentTrack: function(){
+                if ('currentTrack' in wr.playerDelegate)
+                    return wr.playerDelegate.currentTrack();
                 
+                return currentTrack;
             },
             isConnected: function(){
+                if ('isConnected' in wr.playerDelegate)
+                    return wr.playerDelegate.isConnected();
                 
+                return true;
             },
             name: function(){
-                
+                return wr.playerName;
             },
             nextTrack: function(){
-                
+                if ('nextTrack' in wr.playerDelegate)
+                    return wr.playerDelegate.nextTrack();
             },
             pause: function(){
-                
+                if ('pause' in wr.playerDelegate)
+                    return wr.playerDelegate.pause();
             },
             play: function(){
-                
+                if ('play' in wr.playerDelegate)
+                    return wr.playerDelegate.play();
             },
             playerPosition: function(){
+                if ('playerPosition' in wr.playerDelegate)
+                    return wr.playerDelegate.playerPosition();
                 
+                return 0.0;
             },
             playPause: function(){
-                
+                if ('playPause' in wr.playerDelegate)
+                    return wr.playerDelegate.playPause();
             },
             playState: function(){
+                if ('playState' in wr.playerDelegate)
+                    return wr.playerDelegate.playState();
                 
+                return currentPlayState;
             },
             previousTrack: function(){
-                
+                if ('previousTrack' in wr.playerDelegate)
+                    return wr.playerDelegate.previousTrack();
             },
             rating: function(){
+                if ('rating' in wr.playerDelegate)
+                    return wr.playerDelegate.rating();
                 
+                return 0;
             },
             ratingStars: function(){
+                var rating = this.rating();
+                var result = '';
                 
+                while (rating > 0)
+                {
+                    if (rating >= 20)
+                        result += '&#9733;';
+                    else if (rating >= 10)
+                        result += '&frac12;';
+                    
+                    rating -= 20;
+                }
+                
+                return result;
             },
             renderedArtwork: function(){
                 return currentArtwork;
             },
             repeat: function(){
+                if ('repeat' in wr.playerDelegate)
+                    return wr.playerDelegate.repeat();
                 
+                return 0;
             },
             setPlayerPosition: function(position){
-                
+                if ('setPlayerPosition' in wr.playerDelegate)
+                    return wr.playerDelegate.setPlayerPosition(position);
             },
             setRating: function(rating){
-                
+                if ('setRating' in wr.playerDelegate)
+                    return wr.playerDelegate.setRating(rating);
             },
             setRepeat: function(repeat){
-                
+                if ('setRepeat' in wr.playerDelegate)
+                    return wr.playerDelegate.setRepeat(repeat);
             },
             setShuffle: function(shuffle){
-                
+                if ('setShuffle' in wr.playerDelegate)
+                    return wr.playerDelegate.setShuffle(shuffle);
             },
             setVolume: function(volume){
-                
+                if ('setVolume' in wr.playerDelegate)
+                    return wr.playerDelegate.setVolume(volume);
             },
             show: function(){
-                
+                if ('show' in wr.playerDelegate)
+                    return wr.playerDelegate.show();
             },
             shuffle: function(){
+                if ('shuffle' in wr.playerDelegate)
+                    return wr.playerDelegate.shuffle();
                 
+                return false;
             },
             stop: function(){
-                
+                if ('stop' in wr.playerDelegate)
+                    return wr.playerDelegate.stop();
             },
             uniqueString: function(){
+                if ('uniqueString' in wr.playerDelegate)
+                    return wr.playerDelegate.uniqueString();
                 
+                var t = this.currentTrack();
+                var parts = [];
+                for (var prop in t)
+                {
+                    if (t.hasOwnProperty(prop))
+                        parts.push(t[prop]);
+                }
+                
+                return parts.join('#');
             },
             volume: function(){
+                if ('volume' in wr.playerDelegate)
+                    return wr.playerDelegate.volume();
                 
+                return 100;
             }
         },
         Lastfm: {
@@ -376,13 +450,14 @@ Windsor.Runtime.prototype.unloadTheme = function(){
         this.__emit('themeUnloaded');
 };
 Windsor.Runtime.prototype.changeTrack = function(track){
+    this.__trackCurrentTrack(track);
     this.__targetIframe('WRTrackChanged', [track]);
 };
 Windsor.Runtime.prototype.changeArtwork = function(address){
     this.__renderArtwork(address);
-    //this.__targetIframe('WRArtworkChanged', [address]);
 };
 Windsor.Runtime.prototype.changePlayState = function(playState){
+    this.__trackPlayState(playState);
     this.__targetIframe('WRPlayStateChanged', [playState]);
 };
 

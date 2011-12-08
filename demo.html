@@ -7,6 +7,36 @@
     <script type="text/javascript">
     var runtime = new Windsor.Runtime();
     runtime.ignoreHTTPStatusCodes = true;   // so we can run this locally
+    runtime.playerName = 'Demo';
+    runtime.playerDelegate = {
+        play: function(){
+            document.getElementById('demoTrackPlayer').play();
+            runtime.changePlayState(1);
+        },
+        pause: function(){
+            document.getElementById('demoTrackPlayer').pause();
+            runtime.changePlayState(2);
+        },
+        playPause: function(){
+            var el = document.getElementById('demoTrackPlayer');
+            if (el.paused)
+            {
+                el.play();
+                runtime.changePlayState(1);
+            }
+            else
+            {
+                el.pause();
+                runtime.changePlayState(2);
+            }
+        },
+        nextTrack: function(){
+            alert('The theme asked us to skip to the next track! We\'ll just stay put for now.');
+        },
+        previousTrack: function(){
+            alert('The theme asked us to skip to the previous track! We\'ll just stay put for now.');
+        }
+    };
     
     function loadWindsor(){
         runtime.loadTheme('Default.bowtie', function(success, el){
@@ -19,11 +49,24 @@
             el.style.display = null;
         });
     }
+    
+    function playDemoTrack(){
+        document.getElementById('demoTrackPlayer').play();
+        
+        runtime.changeTrack({
+            title: 'MasqueradeE',
+            artist: 'Celestial Aeon Project',
+            album: 'Aeon 3'
+        });
+        runtime.changeArtwork('demo-art.jpg');
+        runtime.changePlayState(1);
+    }
     </script>
 </head>
 <body>
     <h1>Windsor Demo: Default Theme</h1>
     <p>This is a demonstration of using Windsor (a browser-based Bowtie theme runtime) with the default Bowtie theme, known internally as Flip.</p>
-    <p><button id="startFlip();" onclick="loadWindsor();">Load Windsor with Default Theme</button></p>
+    <p><button id="startFlip" onclick="loadWindsor();">Load Windsor with Default Theme</button> <button id="demoTrack" onclick="playDemoTrack();">Play Demo Track (Requires MP3 HTML5 Audio Support)</button></p>
+    <p><audio id="demoTrackPlayer" src="demo.mp3"></p>
 </body>
 </html>
