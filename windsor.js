@@ -48,6 +48,7 @@ Windsor.Runtime = function(){
     // artwork rendering
     var currentlyPendingArtwork = null;
     var currentArtwork = '';
+    var currentArtworkIm = null;
     this.__renderArtwork = function(address){
         var wr = this;
         
@@ -55,13 +56,10 @@ Windsor.Runtime = function(){
         if (address == null)
         {
             currentArtwork = '';
+            currentArtworkIm = null;
             wr.__targetIframe('WRArtworkChanged', ['']);
             return;
-        }
-        
-        var metadata = iframe.WRThemeMetadata;
-        var w = ('BTArtworkWidth' in metadata) ? parseInt(metadata['BTArtworkWidth']) : 175;
-        var h = ('BTArtworkHeight' in metadata) ? parseInt(metadata['BTArtworkHeight']) : 175;       
+        }     
         
         // load the image
         var im = new Image();
@@ -69,44 +67,61 @@ Windsor.Runtime = function(){
             if (currentlyPendingArtwork != address)
                 return; // __renderArtwork was called again in the interim
             
-            // determine the appropriate size for the image
-            var scaledSize;
-            if (im.width == im.height)
-                scaledSize = [w, h];
-            if (im.width > im.height)
-                scaledSize = [w, Math.round(im.height / (im.width / w))];
-            if (im.height > im.width)
-                scaledSize = [Math.round(im.width / (im.height / h)), h];
-            
-            if ('BTDisableArtworkSquaring' in metadata && metadata['BTDisableArtworkSquaring'])
-            {
-                w = scaledSize[0];
-                h = scaledSize[1];
-            }
-            
-            // clear things out
-            canvas.width = w;
-            canvas.height = h;
-
-            var ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // fill with background color
-            var bgcolor = '#000';
-            if ('BTArtworkBackgroundFill' in metadata)
-                bgcolor = metadata['BTArtworkBackgroundFill'];
-            
-            ctx.fillStyle = bgcolor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.drawImage(im, Math.round((w - scaledSize[0]) / 2.0), Math.round((h - scaledSize[1]) / 2.0), scaledSize[0], scaledSize[1]);
-            
-            // finish
             currentlyPendingArtwork = null;
-            currentArtwork = canvas.toDataURL();
-            wr.__targetIframe('WRArtworkChanged', [currentArtwork]);
+            renderArtworkFromImage(im);
         };
         im.src = address;
+    };
+    
+    function renderArtworkFromImage(im){
+        if (im == null)
+        {
+            currentArtwork = '';
+            currentArtworkIm = null;
+            wr.__targetIframe('WRArtworkChanged', ['']);
+            return;
+        }
+        
+        // determine the appropriate size for the image
+        var metadata = iframe.WRThemeMetadata;
+        var w = ('BTArtworkWidth' in metadata) ? parseInt(metadata['BTArtworkWidth']) : 175;
+        var h = ('BTArtworkHeight' in metadata) ? parseInt(metadata['BTArtworkHeight']) : 175;
+        
+        var scaledSize;
+        if (im.width == im.height)
+            scaledSize = [w, h];
+        if (im.width > im.height)
+            scaledSize = [w, Math.round(im.height / (im.width / w))];
+        if (im.height > im.width)
+            scaledSize = [Math.round(im.width / (im.height / h)), h];
+        
+        if ('BTDisableArtworkSquaring' in metadata && metadata['BTDisableArtworkSquaring'])
+        {
+            w = scaledSize[0];
+            h = scaledSize[1];
+        }
+        
+        // clear things out
+        canvas.width = w;
+        canvas.height = h;
+
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // fill with background color
+        var bgcolor = '#000';
+        if ('BTArtworkBackgroundFill' in metadata)
+            bgcolor = metadata['BTArtworkBackgroundFill'];
+        
+        ctx.fillStyle = bgcolor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.drawImage(im, Math.round((w - scaledSize[0]) / 2.0), Math.round((h - scaledSize[1]) / 2.0), scaledSize[0], scaledSize[1]);
+        
+        // finish
+        currentArtwork = canvas.toDataURL();
+        currentArtworkIm = im;
+        wr.__targetIframe('WRArtworkChanged', [currentArtwork]);
     };
     
     // track tracking
@@ -117,6 +132,12 @@ Windsor.Runtime = function(){
     };
     this.__trackPlayState = function(ps){
         currentPlayState = ps;
+    };
+    
+    this.__restoreState = function(){
+        this.__targetIframe('WRTrackChanged', [(currentTrack != null) ? currentTrack : {}]);
+        renderArtworkFromImage(currentArtworkIm);
+        this.__targetIframe('WRPlayStateChanged', [currentPlayState]);
     };
     
     // theme API
@@ -423,6 +444,8 @@ Windsor.Runtime.prototype.loadTheme = function(address, callback, container){
                         
                         if ('BTStatusFunction' in metadata)
                             iframe.WRStatusInterval = setInterval(iframe.WRStatusUpdate, 1000);
+                        
+                        wr.__restoreState();
                         
                         if (wr.showOnLoad)
                             iframe.style.display = null;
