@@ -68,6 +68,7 @@ Windsor.Runtime = function(){
                 return; // __renderArtwork was called again in the interim
             
             currentlyPendingArtwork = null;
+            currentArtworkIm = im;
             renderArtworkFromImage(im);
         };
         im.src = address;
@@ -77,10 +78,12 @@ Windsor.Runtime = function(){
         if (im == null)
         {
             currentArtwork = '';
-            currentArtworkIm = null;
             wr.__targetIframe('WRArtworkChanged', ['']);
             return;
         }
+        
+        if (iframe == null)
+            return;
         
         // determine the appropriate size for the image
         var metadata = iframe.WRThemeMetadata;
@@ -120,7 +123,6 @@ Windsor.Runtime = function(){
         
         // finish
         currentArtwork = canvas.toDataURL();
-        currentArtworkIm = im;
         wr.__targetIframe('WRArtworkChanged', [currentArtwork]);
     };
     
@@ -135,7 +137,7 @@ Windsor.Runtime = function(){
     };
     
     this.__restoreState = function(){
-        this.__targetIframe('WRTrackChanged', [(currentTrack != null) ? currentTrack : {}]);
+        this.__targetIframe('WRTrackChanged', [(currentTrack != null) ? currentTrack : new Windsor.Track()]);
         renderArtworkFromImage(currentArtworkIm);
         this.__targetIframe('WRPlayStateChanged', [currentPlayState]);
     };
