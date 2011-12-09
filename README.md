@@ -62,43 +62,92 @@ You can implement as many or as few of the following methods in the player deleg
 
 You can then call the `Runtime` methods `changeTrack(trackObj)`, `changeArtwork(url)`, and `changePlayState(state)` to notify the theme that the track, artwork, and play state have changed, respectively.
 
-Below is a sample implementation of a way to interface Windsor with a fictitious HTML5 audio player called "TunesPlayer":
+Below is a sample implementation of a way to interface Windsor with an HTML5 audio player that supports play, pause, a back/forward playlist, and timeline scrubbing:
 
-    var tunesPlayer = new TunesPlayerSuperAmazingAwesomeMusicPlayer();
-    // imagine this plays audio, and has methods like .play() and .pause()
+    // create the audio player
+    var audioPlayer = document.createElement('audio');
+    document.body.appendChild(audioPlayer);
     
+    // create the runtime
     var runtime = new Windsor.Runtime();
-    runtime.playerName = 'TunesPlayer';
+    runtime.playerName = 'MyTunes';
     runtime.playerDelegate = {
         play: function(){
             // tell the audio player to play
-            tunesPlayer.play();
+            audioPlayer.play();
         },
         pause: function(){
             // tell the audio player to pause
-            tunesPlayer.pause();
+            audioPlayer.pause();
         },
         nextTrack: function(){
-            // tell the audio player to advance to the next track
-            tunesPlayer.next();
+            // skip to the next track
+            nextTrack();
         },
         previousTrack: function(){
-            // tell the audio player to advance to the next track
-            tunesPlayer.previous();
+            // skip to the previous track
+            prevTrack();
+        },
+        playerPosition: function(){
+            // get the current playback position
+            return audioPlayer.currentTime;
+        },
+        setPlayerPosition: function(pos){
+            // set the current playback position
+            audioPlayer.currentTime = pos;
         }
     };
     
-    // give feedback when the not-real TunesPlayer tells us the track changes
-    tunesPlayer.ontrackchange = function(track, artworkURL){
-        runtime.changeTrack({title: track.title, artist: track.artist, album: track.album});
-        runtime.changeArtwork(artworkURL);
-    };
-    tunesPlayer.onplaystatechange = function(paused){
-        if (paused)
-            runtime.changePlayState(2);
+    // use an array as a playlist
+    var currentTrack = -1;
+    var playlist = [
+        {file: 'trackOne.m4a', title: 'Track One', artist: 'Foo', album: 'Bar', art: 'track1.jpg'},
+        {file: 'trackTwo.m4a', title: 'Track Two', artist: 'Foo', album: 'Bar', art: 'track2.jpg'},
+        {file: 'trackThree.m4a', title: 'Track Three', artist: 'Foo', album: 'Bar', art: 'track3.jpg'}
+    ];
+    
+    // provide next/back functions
+    function nextTrack(){
+        if (++currentTrack > playlist.length)
+        {
+            currentTrack = -1;
+            audioPlayer.src = '';
+        }
         else
-            runtime.changePlayState(1);
+        {
+            audioPlayer.src = playlist[currentTrack].file;
+            audioPlayer.play();
+        }
+    }
+    function prevTrack(){
+        if (--currentTrack == -1)
+            audioPlayer.src = '';
+        else
+        {
+            audioPlayer.src = playlist[currentTrack].file;
+            audioPlayer.play();
+        }
+    }
+    
+    // give feedback when the player's state changes
+    audioPlayer.onplay = function(){
+        runtime.changePlayState(1);
     };
+    audioPlayer.onpause = function(){
+        runtime.changePlayState(2);
+    };
+    audioPlayer.onloadedmetadata = function(){
+        if (currentTrack == -1)
+            return;
+        
+        // this occurs when we've picked a track to play, and now it's ready
+        var track = playlist[currentTrack];
+        runtime.changeTrack({title: track.title, artist: track.artist, album: track.album, length: audioPlayer.duration});
+        runtime.changeArtwork(track.art);
+    };
+    
+    // play some tracks!
+    nextTrack();
 
 More Details
 ------------
