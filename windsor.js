@@ -44,6 +44,11 @@ Windsor.Runtime = function(){
     this.getElement = function(){
         return iframe;
     };
+    this.getMetadata = function(){
+        if (iframe != null)
+            return iframe.WRThemeMetadata;
+        return null;
+    };
     
     // artwork rendering
     var currentlyPendingArtwork = null;
