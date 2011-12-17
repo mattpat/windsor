@@ -11,17 +11,21 @@ Usage
 -----
 Start out by creating an instance of the runtime object:
 
-    var runtime = new Windsor.Runtime();
+```javascript
+var runtime = new Windsor.Runtime();
+```
 
 When you're ready to load a theme, call the `loadTheme` method of the runtime with the address of the theme (it can be relative, and *must* be in the same origin as the host website), an optional callback to be called when the theme finishes loading (can be `null`), and optionally the element that you want to contain your theme's iframe (this defaults to `document.body`).
 
-    runtime.loadTheme('Default.bowtie', function(success, iframe){
-        if (success)
-        {
-            // show the iframe, nothing fancy, just "appears"
-            iframe.style.display = null;
-        }
-    });
+```javascript
+runtime.loadTheme('Default.bowtie', function(success, iframe){
+    if (success)
+    {
+        // show the iframe, nothing fancy, just "appears"
+        iframe.style.display = null;
+    }
+});
+```
 
 Your callback receives two parameters: `success`, which is a boolean indicating whether or not the theme loaded into the browser; and `iframe`, which is a reference to the DOM element that represents the loaded theme (it can be obtained at another time using `runtime.getElement()`). When this callback is called, the iframe will have "display: none" set in its `style` attribute -- this gives you the opportunity to fade it in, perform animations, or just display it immediately.
 
@@ -64,90 +68,92 @@ You can then call the `Runtime` methods `changeTrack(trackObj)`, `changeArtwork(
 
 Below is a sample implementation of a way to interface Windsor with an HTML5 audio player that supports play, pause, a back/forward playlist, and timeline scrubbing:
 
-    // create the audio player
-    var audioPlayer = document.createElement('audio');
-    document.body.appendChild(audioPlayer);
+```javascript
+// create the audio player
+var audioPlayer = document.createElement('audio');
+document.body.appendChild(audioPlayer);
     
-    // create the runtime
-    var runtime = new Windsor.Runtime();
-    runtime.playerName = 'MyTunes';
-    runtime.playerDelegate = {
-        play: function(){
-            // tell the audio player to play
-            audioPlayer.play();
-        },
-        pause: function(){
-            // tell the audio player to pause
-            audioPlayer.pause();
-        },
-        nextTrack: function(){
-            // skip to the next track
-            nextTrack();
-        },
-        previousTrack: function(){
-            // skip to the previous track
-            prevTrack();
-        },
-        playerPosition: function(){
-            // get the current playback position
-            return audioPlayer.currentTime;
-        },
-        setPlayerPosition: function(pos){
-            // set the current playback position
-            audioPlayer.currentTime = pos;
-        }
-    };
-    
-    // use an array as a playlist
-    var currentTrack = -1;
-    var playlist = [
-        {file: 'trackOne.m4a', title: 'Track One', artist: 'Foo', album: 'Bar', art: 'track1.jpg'},
-        {file: 'trackTwo.m4a', title: 'Track Two', artist: 'Foo', album: 'Bar', art: 'track2.jpg'},
-        {file: 'trackThree.m4a', title: 'Track Three', artist: 'Foo', album: 'Bar', art: 'track3.jpg'}
-    ];
-    
-    // provide next/back functions
-    function nextTrack(){
-        if (++currentTrack > playlist.length)
-        {
-            currentTrack = -1;
-            audioPlayer.src = '';
-        }
-        else
-        {
-            audioPlayer.src = playlist[currentTrack].file;
-            audioPlayer.play();
-        }
+// create the runtime
+var runtime = new Windsor.Runtime();
+runtime.playerName = 'MyTunes';
+runtime.playerDelegate = {
+    play: function(){
+        // tell the audio player to play
+        audioPlayer.play();
+    },
+    pause: function(){
+        // tell the audio player to pause
+        audioPlayer.pause();
+    },
+    nextTrack: function(){
+        // skip to the next track
+        nextTrack();
+    },
+    previousTrack: function(){
+        // skip to the previous track
+        prevTrack();
+    },
+    playerPosition: function(){
+        // get the current playback position
+        return audioPlayer.currentTime;
+    },
+    setPlayerPosition: function(pos){
+        // set the current playback position
+        audioPlayer.currentTime = pos;
     }
-    function prevTrack(){
-        if (--currentTrack == -1)
-            audioPlayer.src = '';
-        else
-        {
-            audioPlayer.src = playlist[currentTrack].file;
-            audioPlayer.play();
-        }
-    }
+};
     
-    // give feedback when the player's state changes
-    audioPlayer.onplay = function(){
-        runtime.changePlayState(1);
-    };
-    audioPlayer.onpause = function(){
-        runtime.changePlayState(2);
-    };
-    audioPlayer.onloadedmetadata = function(){
-        if (currentTrack == -1)
-            return;
+// use an array as a playlist
+var currentTrack = -1;
+var playlist = [
+    {file: 'trackOne.m4a', title: 'Track One', artist: 'Foo', album: 'Bar', art: 'track1.jpg'},
+    {file: 'trackTwo.m4a', title: 'Track Two', artist: 'Foo', album: 'Bar', art: 'track2.jpg'},
+    {file: 'trackThree.m4a', title: 'Track Three', artist: 'Foo', album: 'Bar', art: 'track3.jpg'}
+];
+    
+// provide next/back functions
+function nextTrack(){
+    if (++currentTrack > playlist.length)
+    {
+        currentTrack = -1;
+        audioPlayer.src = '';
+    }
+    else
+    {
+        audioPlayer.src = playlist[currentTrack].file;
+        audioPlayer.play();
+    }
+}
+function prevTrack(){
+    if (--currentTrack == -1)
+        audioPlayer.src = '';
+    else
+    {
+        audioPlayer.src = playlist[currentTrack].file;
+        audioPlayer.play();
+    }
+}
+    
+// give feedback when the player's state changes
+audioPlayer.onplay = function(){
+    runtime.changePlayState(1);
+};
+audioPlayer.onpause = function(){
+    runtime.changePlayState(2);
+};
+audioPlayer.onloadedmetadata = function(){
+    if (currentTrack == -1)
+        return;
         
-        // this occurs when we've picked a track to play, and now it's ready
-        var track = playlist[currentTrack];
-        runtime.changeTrack({title: track.title, artist: track.artist, album: track.album, length: audioPlayer.duration});
-        runtime.changeArtwork(track.art);
-    };
+    // this occurs when we've picked a track to play, and now it's ready
+    var track = playlist[currentTrack];
+    runtime.changeTrack({title: track.title, artist: track.artist, album: track.album, length: audioPlayer.duration});
+    runtime.changeArtwork(track.art);
+};
     
-    // play some tracks!
-    nextTrack();
+// play some tracks!
+nextTrack();
+```
 
 More Details
 ------------
