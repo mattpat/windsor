@@ -159,7 +159,7 @@ Windsor.Runtime = function(){
                 });
             },
             buildVersion: function(){
-                return 1400;
+                return 1500;
             },
             currentFrame: function(){
                 if (iframe == null)
