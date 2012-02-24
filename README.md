@@ -159,7 +159,7 @@ More Details
 ------------
 The main entry point of Windsor is the `Runtime` class. You can load one theme at a time per runtime, but you can have multiple runtimes if you'd like to have more than one theme running on your page (though I'm not sure why you would).
 
-Windsor implements the entire [Bowtie Theme API][api] and exposes it to an iframe containing a Bowtie theme. The implementation currently reflects the Theme API as of Bowtie 1.4, so Windsor identifies itself to the theme as such (version 1.4, build 1400).
+Windsor implements the entire [Bowtie Theme API][api] and exposes it to an iframe containing a Bowtie theme. The implementation currently reflects the Theme API as of Bowtie 1.5, so Windsor identifies itself to the theme as such (version 1.5, build 1500).
 
   [api]: http://library.13bold.com/developing-themes-for-bowtie/
 
